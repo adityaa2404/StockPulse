@@ -1,3 +1,11 @@
+# StockPulse Architecture Decision Record
+
+> **Implementation status:** The reactive commerce backend and rule-based advisor are implemented and runnable. The Gemini advisor is now implemented with environment-key detection, structured JSON parsing, output validation, timeout/error fallback to the rule-based advisor, and separate trigger context for inventory-low, demand-spike, and manual requests. The frontend is implemented as a React 18/Vite application.
+>
+> **Verified scope for this branch:** product/catalog APIs, stock/order updates, persisted pricing and reorder suggestions, rule-based pricing/reorder logic, asynchronous inventory-triggered recommendations, duplicate pending-suggestion prevention, human accept/reject checkpoint, runtime strategy selection, Gemini integration with deterministic fallback, and React dashboard.
+>
+> **Not included:** payments, cart/checkout, competitor scraping, supplier APIs/purchase orders, authentication, microservices, Redis/Kafka, RAG, and SSE.
+
 # Architecture Decision Record
 
 ## StockPulse — AI Inventory & Dynamic Pricing Engine
