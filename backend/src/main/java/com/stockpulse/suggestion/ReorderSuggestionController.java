@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/reorder-suggestions")
@@ -11,6 +12,18 @@ public class ReorderSuggestionController {
     
     @Autowired
     private SuggestionService suggestionService;
+    
+    @GetMapping
+    public ResponseEntity<List<ReorderSuggestion>> getReorderSuggestions(
+            @RequestParam(required = false) Status status) {
+        List<ReorderSuggestion> suggestions;
+        if (status != null) {
+            suggestions = suggestionService.getReorderSuggestionsByStatus(status);
+        } else {
+            suggestions = suggestionService.getAllReorderSuggestions();
+        }
+        return new ResponseEntity<>(suggestions, HttpStatus.OK);
+    }
     
     @PatchMapping("/{id}")
     public ResponseEntity<ReorderSuggestion> updateReorderSuggestionStatus(

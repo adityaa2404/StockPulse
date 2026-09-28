@@ -8,4 +8,8 @@ import java.util.List;
 @Repository
 public interface PricingSuggestionRepository extends JpaRepository<PricingSuggestion, Long> {
     List<PricingSuggestion> findByProductAndStatus(Product product, Status status);
+    
+    List<PricingSuggestion> findByStatus(Status status);
+    
+    List<PricingSuggestion> findByProductAndStatusAndTriggerReason(Product product, Status status, TriggerReason triggerReason);
 }

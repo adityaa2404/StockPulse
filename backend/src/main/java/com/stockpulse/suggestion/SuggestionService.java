@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -28,6 +29,22 @@ public class SuggestionService {
     
     @Autowired
     private CommerceService commerceService;
+    
+    public List<PricingSuggestion> getAllPricingSuggestions() {
+        return pricingSuggestionRepository.findAll();
+    }
+    
+    public List<PricingSuggestion> getPricingSuggestionsByStatus(Status status) {
+        return pricingSuggestionRepository.findByStatus(status);
+    }
+    
+    public List<ReorderSuggestion> getAllReorderSuggestions() {
+        return reorderSuggestionRepository.findAll();
+    }
+    
+    public List<ReorderSuggestion> getReorderSuggestionsByStatus(Status status) {
+        return reorderSuggestionRepository.findByStatus(status);
+    }
     
     public PricingSuggestion createPricingSuggestion(Long productId) {
         Optional<Product> optionalProduct = productService.getProductById(productId);

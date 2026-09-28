@@ -1,6 +1,10 @@
 package com.stockpulse.product;
 
+import com.stockpulse.event.InventoryChangedEvent;
+import com.stockpulse.suggestion.TriggerReason;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -11,6 +15,12 @@ public class ProductService {
     
     @Autowired
     private ProductRepository productRepository;
+    
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
+    
+    @Value("${stockpulse.demand-spike.multiplier:3.0}")
+    private double demandSpikeMultiplier;
     
     public List<Product> getAllProducts() {
         return productRepository.findAll();
@@ -33,6 +43,11 @@ public class ProductService {
         Optional<Product> optionalProduct = productRepository.findById(productId);
         if (optionalProduct.isPresent()) {
             Product product = optionalProduct.get();
+            
+            // Store original values for comparison
+            int originalStockLevel = product.getStockLevel();
+            int originalDemandVelocity = product.getDemandVelocity();
+            
             product.setStockLevel(newStockLevel);
             
             // Update status if stock level is 0
@@ -42,7 +57,12 @@ public class ProductService {
                 product.setStatus(ProductStatus.ACTIVE);
             }
             
-            return productRepository.save(product);
+            Product savedProduct = productRepository.save(product);
+            
+            // Publish events after successful save
+            publishInventoryEvents(savedProduct, originalStockLevel, originalDemandVelocity);
+            
+            return savedProduct;
         }
         return null;
     }
@@ -58,6 +78,10 @@ public class ProductService {
                 return false;
             }
             
+            // Store original values for comparison
+            int originalStockLevel = product.getStockLevel();
+            int originalDemandVelocity = product.getDemandVelocity();
+            
             // Decrement stock level
             product.setStockLevel(product.getStockLevel() - quantity);
             
@@ -69,10 +93,47 @@ public class ProductService {
                 product.setStatus(ProductStatus.OUT_OF_STOCK);
             }
             
-            productRepository.save(product);
+            Product savedProduct = productRepository.save(product);
+            
+            // Publish events after successful save
+            publishInventoryEvents(savedProduct, originalStockLevel, originalDemandVelocity);
+            
             return true;
         }
         return false;
+    }
+    
+    private void publishInventoryEvents(Product product, int originalStockLevel, int originalDemandVelocity) {
+        boolean inventoryLowEventPublished = false;
+        boolean demandSpikeEventPublished = false;
+        
+        // Check for inventory low condition
+        if (product.getStockLevel() < product.getReorderThreshold()) {
+            eventPublisher.publishEvent(new InventoryChangedEvent(product.getId(), TriggerReason.INVENTORY_LOW));
+            inventoryLowEventPublished = true;
+        }
+        
+        // Check for demand spike condition
+        double categoryAverage = getCategoryAverageDemand(product.getCategory());
+        if (categoryAverage > 0 && product.getDemandVelocity() > demandSpikeMultiplier * categoryAverage) {
+            eventPublisher.publishEvent(new InventoryChangedEvent(product.getId(), TriggerReason.DEMAND_SPIKE));
+            demandSpikeEventPublished = true;
+        }
+    }
+    
+    private double getCategoryAverageDemand(Category category) {
+        List<Product> products = productRepository.findAll();
+        int totalDemand = 0;
+        int categoryCount = 0;
+        
+        for (Product product : products) {
+            if (product.getCategory() == category) {
+                totalDemand += product.getDemandVelocity();
+                categoryCount++;
+            }
+        }
+        
+        return categoryCount > 0 ? (double) totalDemand / categoryCount : 0;
     }
     
     @Transactional

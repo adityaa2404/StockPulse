@@ -1,6 +1,8 @@
 package com.stockpulse;
 
 import com.stockpulse.product.*;
+import com.stockpulse.suggestion.PricingSuggestionRepository;
+import com.stockpulse.suggestion.ReorderSuggestionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -12,9 +14,17 @@ public class DataSeeder implements CommandLineRunner {
     @Autowired
     private ProductRepository productRepository;
     
+    @Autowired
+    private PricingSuggestionRepository pricingSuggestionRepository;
+    
+    @Autowired
+    private ReorderSuggestionRepository reorderSuggestionRepository;
+    
     @Override
     public void run(String... args) throws Exception {
-        // Clear existing data
+        // Clear existing data in correct order to maintain referential integrity
+        reorderSuggestionRepository.deleteAll();
+        pricingSuggestionRepository.deleteAll();
         productRepository.deleteAll();
         
         // Seed data from the brief

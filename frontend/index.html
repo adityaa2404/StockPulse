@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StockPulse - AI Inventory Management</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div id="root" class="container mx-auto px-4 py-8"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function App() {
+            const [products, setProducts] = useState([]);
+            const [pricingSuggestions, setPricingSuggestions] = useState([]);
+            const [reorderSuggestions, setReorderSuggestions] = useState([]);
+            const [loading, setLoading] = useState(true);
+
+            const API_BASE = 'http://localhost:8080';
+
+            const fetchData = async () => {
+                try {
+                    setLoading(true);
+                    const [productsRes, pricingRes, reorderRes] = await Promise.all([
+                        fetch(`${API_BASE}/products`),
+                        fetch(`${API_BASE}/pricing-suggestions?status=PENDING`),
+                        fetch(`${API_BASE}/reorder-suggestions?status=PENDING`)
+                    ]);
+
+                    if (productsRes.ok) setProducts(await productsRes.json());
+                    if (pricingRes.ok) setPricingSuggestions(await pricingRes.json());
+                    if (reorderRes.ok) setReorderSuggestions(await reorderRes.json());
+                } catch (error) {
+                    console.error('Error fetching data:', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            useEffect(() => {
+                fetchData();
+            }, []);
+
+            if (loading) {
+                return (
+                    <div className="flex justify-center items-center h-64">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+                    </div>
+                );
+            }
+
+            return (
+                <div>
+                    <div className="mb-8">
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">StockPulse Dashboard</h1>
+                        <p className="text-gray-600">AI-powered inventory and dynamic pricing engine</p>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

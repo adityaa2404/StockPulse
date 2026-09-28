@@ -8,4 +8,8 @@ import java.util.List;
 @Repository
 public interface ReorderSuggestionRepository extends JpaRepository<ReorderSuggestion, Long> {
     List<ReorderSuggestion> findByProductAndStatus(Product product, Status status);
+    
+    List<ReorderSuggestion> findByStatus(Status status);
+    
+    List<ReorderSuggestion> findByProductAndStatusAndTriggerReason(Product product, Status status, TriggerReason triggerReason);
 }

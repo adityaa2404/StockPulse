@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/pricing-suggestions")
@@ -11,6 +12,18 @@ public class PricingSuggestionController {
     
     @Autowired
     private SuggestionService suggestionService;
+    
+    @GetMapping
+    public ResponseEntity<List<PricingSuggestion>> getPricingSuggestions(
+            @RequestParam(required = false) Status status) {
+        List<PricingSuggestion> suggestions;
+        if (status != null) {
+            suggestions = suggestionService.getPricingSuggestionsByStatus(status);
+        } else {
+            suggestions = suggestionService.getAllPricingSuggestions();
+        }
+        return new ResponseEntity<>(suggestions, HttpStatus.OK);
+    }
     
     @PatchMapping("/{id}")
     public ResponseEntity<PricingSuggestion> updatePricingSuggestionStatus(
